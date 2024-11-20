@@ -1,8 +1,8 @@
 Package.describe({
-  name: 'danopia:opentelemetry',
-  version: '0.6.2',
+  name: 'keela-co:opentelemetry',
+  version: '0.6.3',
   summary: 'Meteor instrumentations for OpenTelemetry tracing',
-  git: 'https://github.com/danopia/meteor-opentelemetry',
+  git: 'https://github.com/keela-co/meteor-opentelemetry',
   documentation: 'README.md',
 });
 
@@ -37,6 +37,6 @@ Package.onUse(function(api) {
 Package.onTest(function(api) {
   api.use('ecmascript');
   api.use('tinytest');
-  api.use('danopia:opentelemetry');
+  api.use('keela-co:opentelemetry');
   api.mainModule('opentelemetry-tests.js');
 });

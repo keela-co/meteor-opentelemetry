@@ -1,4 +1,4 @@
-# `danopia:opentelemetry`
+# `keela-co:opentelemetry`
 
 This Meteor package hooks up OpenTelemetry (and OTLP-JSON) within a Meteor app.
 The tracer is customized for Meteor 2's quirky and incompatible way of executing async code.
@@ -67,7 +67,7 @@ Example snippit for your `client.ts` file:
 ```ts
 // Set up an OpenTelemetry provider using DDP submission and tracing
 // (required to have client-to-server DDP tracing)
-import 'meteor/danopia:opentelemetry';
+import 'meteor/keela-co:opentelemetry';
 
 // Register additional browser-side instrumentations
 // (optional)
@@ -95,7 +95,7 @@ You can also enable this library and supply configuration via Meteor settings:
 ```json
 {
   "packages": {
-    "danopia:opentelemetry": {
+    "keela-co:opentelemetry": {
       "enabled": true,
       "serverResourceAttributes": {
         "service.name": "my-app",
@@ -119,7 +119,7 @@ So it might be desirable to set resource attributes via Meteor settings:
 ```json
 {
   "packages": {
-    "danopia:opentelemetry": {
+    "keela-co:opentelemetry": {
       "enabled": true,
       "serverResourceAttributes": {
         "service.name": "my-app",
@@ -132,4 +132,20 @@ So it might be desirable to set resource attributes via Meteor settings:
     }
   }
 }
+```
+
+## Test package locally
+
+Go to the project you want to test this package with and run:
+
+```sh
+mkdir packages
+cd pakcages
+ln -s /path/to/meteor-opentelemetry keela-co:opentelemetry
+```
+
+Then add the package to your project:
+
+```sh
+meteor add keela-co:opentelemetry
 ```

@@ -2,7 +2,7 @@ import {
   type Span,
 } from "@opentelemetry/api";
 
-declare module "meteor/danopia:opentelemetry" {
+declare module "meteor/keela-co:opentelemetry" {
 
   export function traceAsyncFunc<T>(spanName: string, func: (span: Span) => Promise<T>): Promise<T>;
 
