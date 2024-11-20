@@ -277,7 +277,7 @@ function _defaultDbStatementSerializer(commandObj: string | Record<string, unkno
   if (typeof commandObj == 'string' && isRoot) return { _id: '?' };
   if (enhancedDbReporting) return commandObj; // pretty leaky tbh
 
-  if (typeof commandObj == 'object' && commandObj.constructor == Object) {
+  if (typeof commandObj == 'object' && commandObj?.constructor == Object) {
     // rewrite the object
     return Object.fromEntries(Object.entries(commandObj).map(([key,val]) => {
       if (key.startsWith('$')) {

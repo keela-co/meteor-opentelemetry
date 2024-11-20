@@ -8,7 +8,7 @@ export const settings: {
   clientResourceAttributes?: Attributes;
   enhancedDbReporting?: boolean;
 } = {
-  ...Meteor.settings.packages?.["keela-co:opentelemetry"] ?? {},
+  ...Meteor.settings.packages?.["networksforchange:opentelemetry"] ?? {},
 };
 
 // special-casing for particular deployment environments..

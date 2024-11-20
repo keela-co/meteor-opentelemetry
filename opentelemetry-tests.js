@@ -2,7 +2,7 @@
 import { Tinytest } from "meteor/tinytest";
 
 // Import and rename a variable exported by opentelemetry.js.
-import { name as packageName } from "meteor/keela-co:opentelemetry";
+import { name as packageName } from "meteor/networksforchange:opentelemetry";
 
 // Write your tests here!
 // Here is an example.
