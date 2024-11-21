@@ -1,5 +1,6 @@
 import { DDP, DDPCommon } from "meteor/ddp";
 import { Meteor } from "meteor/meteor";
+import { type Attributes } from "@opentelemetry/api";
 
 import { context, propagation, SpanKind, trace } from "@opentelemetry/api";
 
@@ -8,9 +9,13 @@ import { context, propagation, SpanKind, trace } from "@opentelemetry/api";
 const methodTracer = trace.getTracer('ddp.method');
 const subTracer = trace.getTracer('ddp.subscription');
 
+const settings: {
+  clientResourceAttributes?: Attributes;
+} = {
+  ...Meteor.settings['networksforchange:opentelemetry'] ?? {},
+};
 
 const ddp = Meteor.connection as ReturnType<typeof DDP.connect>;
-console.log('welcome', ddp.status())
 
 // const origSend = ddp._send;
 // ddp._send = function (obj: Record<string,unknown>) {
@@ -37,6 +42,7 @@ ddp._apply = function _apply(this: typeof ddp, name, stubCallValue, args, option
       'rpc.method': name,
       'rpc.ddp.session': this.id,
       'rpc.ddp.version': this.version,
+      ...(settings.clientResourceAttributes ?? {}),
       // 'rpc.ddp.method_id': payload.id,
   // 'ddp.user_id': this.userId ?? '',
       // 'ddp.connection': this.connection?.id,
@@ -62,6 +68,7 @@ ddp._send = function _send(this: typeof ddp, payload) {
       'rpc.ddp.session': this.id,
       'rpc.ddp.version': this.version,
       'rpc.ddp.sub_id': payload.id,
+      ...(settings.clientResourceAttributes ?? {}),
       // 'ddp.user_id': this.userId ?? '',
       // 'ddp.connection': this.connection?.id,
     },
