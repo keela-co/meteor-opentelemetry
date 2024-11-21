@@ -8,7 +8,9 @@ export const settings: {
   clientResourceAttributes?: Attributes;
   enhancedDbReporting?: boolean;
 } = {
-  ...Meteor.settings.packages?.["networksforchange:opentelemetry"] ?? {},
+  ...(Meteor.settings.packages?.["networksforchange:opentelemetry"] ?? {}),
+  ...(Meteor.settings.public?.["networksforchange:opentelemetry"] ?? {}),
+  ...(Meteor.settings.private?.["networksforchange:opentelemetry"] ?? {}),
 };
 
 // special-casing for particular deployment environments..
