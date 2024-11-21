@@ -7,6 +7,7 @@ export {
 
 export {
   traceAsyncFunc,
+  traceFunc,
   tracedInterval,
   tracedTimeout,
 } from './api';

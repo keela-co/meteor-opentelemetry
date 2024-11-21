@@ -10,6 +10,7 @@ import './tracer-server'
 
 export {
   traceAsyncFunc,
+  traceFunc,
   tracedInterval,
   tracedTimeout,
 } from './api';
