@@ -5,11 +5,17 @@ import {
   trace,
 } from "@opentelemetry/api";
 import { Meteor } from "meteor/meteor";
+import {settings} from "./settings";
+import {SpanMock} from "./span-mock";
 
 const tracer = trace.getTracer('async_func');
 
 // @ts-ignore
 export async function traceAsyncFunc<T extends TraceableAsyncFunction<R>, R>(spanName: string, func: T): ReturnType<T> {
+  // enabled is only defined in the frontend. That's why we need to check if it's false explicitly.
+  if(settings.enabled === false) {
+    return await func(new SpanMock()) as ReturnType<T>;
+  }
   const span = tracer.startSpan(spanName, {
     kind: SpanKind.INTERNAL,
   });
@@ -25,6 +31,10 @@ export async function traceAsyncFunc<T extends TraceableAsyncFunction<R>, R>(spa
 }
 
 export function traceFunc<T extends TraceableFunction<R>, R>(spanName: string, func: NotAsyncFunction<T>): ReturnType<T> {
+  // enabled is only defined in the frontend. That's why we need to check if it's false explicitly.
+  if(settings.enabled === false) {
+    return func(new SpanMock()) as ReturnType<T>;
+  }
   const span = tracer.startSpan(spanName, {
     kind: SpanKind.INTERNAL,
   });
