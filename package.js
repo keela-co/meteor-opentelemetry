@@ -1,6 +1,6 @@
 Package.describe({
   name: 'networksforchange:opentelemetry',
-  version: '0.7.0',
+  version: '0.7.2',
   summary: 'Meteor instrumentations for OpenTelemetry tracing',
   git: 'https://github.com/keela-co/meteor-opentelemetry',
   documentation: 'README.md',

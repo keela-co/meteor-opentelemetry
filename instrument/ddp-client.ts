@@ -1,34 +1,14 @@
 import { DDP, DDPCommon } from "meteor/ddp";
 import { Meteor } from "meteor/meteor";
-import { type Attributes } from "@opentelemetry/api";
+import { settings } from "../settings-client";
 
 import { context, propagation, SpanKind, trace } from "@opentelemetry/api";
-
-// We hook the DDP apply
 
 const methodTracer = trace.getTracer('ddp.method');
 const subTracer = trace.getTracer('ddp.subscription');
 
-const settings: {
-  clientResourceAttributes?: Attributes;
-} = {
-  ...Meteor.settings['networksforchange:opentelemetry'] ?? {},
-};
-
 const ddp = Meteor.connection as ReturnType<typeof DDP.connect>;
 
-// const origSend = ddp._send;
-// ddp._send = function (obj: Record<string,unknown>) {
-//   const ctx = context.active();
-//   const baggage: Record<string,string> = {};
-//   propagation.inject(ctx, baggage, {
-//     set: (h, k, v) => h[k] = typeof v === 'string' ? v : String(v),
-//   });
-//   origSend.call(this, {
-//     ...obj,
-//     baggage,
-//   });
-// }
 const origApply = ddp._apply
 ddp._apply = function _apply(this: typeof ddp, name, stubCallValue, args, options, callback) {
   // TODO: why doesn't suppressTracing accomplish this?
@@ -43,13 +23,9 @@ ddp._apply = function _apply(this: typeof ddp, name, stubCallValue, args, option
       'rpc.ddp.session': this.id,
       'rpc.ddp.version': this.version,
       ...(settings.clientResourceAttributes ?? {}),
-      // 'rpc.ddp.method_id': payload.id,
-  // 'ddp.user_id': this.userId ?? '',
-      // 'ddp.connection': this.connection?.id,
     },
-  }, span => {
+  }, () => {
     origApply.call(this, name, stubCallValue, args, options, callback);
-    // span.end();
   });
 };
 
@@ -58,8 +34,6 @@ ddp._send = function _send(this: typeof ddp, payload) {
   if (payload.msg !== 'sub') {
     return origSend.call(this, payload);
   }
-  // console.log('innft', payload)
-
   const span = subTracer.startSpan(payload.name, {
     kind: SpanKind.CLIENT,
     attributes: {
@@ -69,8 +43,6 @@ ddp._send = function _send(this: typeof ddp, payload) {
       'rpc.ddp.version': this.version,
       'rpc.ddp.sub_id': payload.id,
       ...(settings.clientResourceAttributes ?? {}),
-      // 'ddp.user_id': this.userId ?? '',
-      // 'ddp.connection': this.connection?.id,
     },
   }, context.active());
   this._subscriptions[payload.id].otelSpan = span;
@@ -114,7 +86,6 @@ ddp._methodInvokers = new Proxy<Record<string|symbol,{
       span?.end();
       origCb();
     }
-    // console.log('set method invoker', {self, key, value})
     self[key] = value;
     return true;
   }

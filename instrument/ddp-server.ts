@@ -6,6 +6,7 @@ import { Meteor } from "meteor/meteor";
 
   const methodtracer = trace.getTracer('ddp.method');
   const originMethod = protocol_handlers.method;
+
   protocol_handlers.method = function (payload, unblock) {
     const ctx = propagation.extract(ROOT_CONTEXT, payload.baggage ?? {}, {
       get(h,k) { return h[k]; },
@@ -57,7 +58,6 @@ import { Meteor } from "meteor/meteor";
       },
     }, ctx, span => {
       this.subSpans.set(payload.id, span);
-      // console.log('storing', payload.id)
       return origSub.call(this, payload, unblock);
     });
   };
@@ -88,7 +88,6 @@ import { Meteor } from "meteor/meteor";
       const subId = payload.id;
       const subSpan = this.subSpans?.get(subId);
       if (subSpan) {
-        // console.log('nosssub', subId, !!subSpan, payload.error);
         recordSpanError(subSpan, payload.error);
         subSpan.end();
         this.subSpans?.delete(subId);
