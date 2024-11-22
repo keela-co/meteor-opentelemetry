@@ -12,13 +12,13 @@ Npm.depends({
   // TODO: consider https://github.com/Meteor-Community-Packages/check-npm-versions
   // '@opentelemetry/api': '1.9.0',
 
-  '@opentelemetry/sdk-trace-node': '1.24.0',
-  '@opentelemetry/sdk-trace-web': '1.24.0',
-  '@opentelemetry/semantic-conventions': '1.24.0',
+  '@opentelemetry/sdk-trace-node': '1.28.0',
+  '@opentelemetry/sdk-trace-web': '1.28.0',
+  '@opentelemetry/semantic-conventions': '1.28.0',
 
-  '@opentelemetry/otlp-transformer': '0.51.0',
-  '@opentelemetry/exporter-trace-otlp-http': '0.51.0',
-  '@opentelemetry/exporter-metrics-otlp-http': '0.51.0',
+  '@opentelemetry/otlp-transformer': '0.55.0',
+  '@opentelemetry/exporter-trace-otlp-http': '0.55.0',
+  '@opentelemetry/exporter-metrics-otlp-http': '0.55.0',
 
 });
 
