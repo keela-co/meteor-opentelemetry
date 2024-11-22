@@ -1,6 +1,6 @@
 import { DDP, DDPCommon } from "meteor/ddp";
 import { Meteor } from "meteor/meteor";
-import { settings } from "../settings-client";
+import { settings } from "../settings";
 
 import { context, propagation, SpanKind, trace } from "@opentelemetry/api";
 

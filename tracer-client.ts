@@ -7,7 +7,7 @@ import { Resource } from '@opentelemetry/resources';
 
 import { DDPSpanExporter } from "./ddp-otlp-client";
 import './instrument/ddp-client'
-import {settings} from "./settings-client";
+import {settings} from "./settings";
 
 export const resource = new Resource({
   'service.name': settings.clientResourceAttributes?.['service.name'] ?? 'unknown_service',
