@@ -8,10 +8,6 @@ import { Meteor } from "meteor/meteor";
 
 const tracer = trace.getTracer('async_func');
 
-type TraceableFunction<T> = (span: Span) => T
-type TraceableAsyncFunction<T> = (span: Span) => Promise<T>;
-type NotAsyncFunction<T> = T extends TraceableAsyncFunction<any> ? never : T;
-
 // @ts-ignore
 export async function traceAsyncFunc<T extends TraceableAsyncFunction<R>, R>(spanName: string, func: T): ReturnType<T> {
   const span = tracer.startSpan(spanName, {
