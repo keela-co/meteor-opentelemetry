@@ -1,6 +1,6 @@
 Package.describe({
   name: 'networksforchange:opentelemetry',
-  version: '0.7.3',
+  version: '0.7.4',
   summary: 'Meteor instrumentations for OpenTelemetry tracing',
   git: 'https://github.com/keela-co/meteor-opentelemetry',
   documentation: 'README.md',
@@ -12,13 +12,13 @@ Npm.depends({
   // TODO: consider https://github.com/Meteor-Community-Packages/check-npm-versions
   // '@opentelemetry/api': '1.9.0',
 
-  '@opentelemetry/sdk-trace-node': '1.28.0',
-  '@opentelemetry/sdk-trace-web': '1.28.0',
-  '@opentelemetry/semantic-conventions': '1.28.0',
+  '@opentelemetry/sdk-trace-node': '1.25.0',
+  '@opentelemetry/sdk-trace-web': '1.25.0',
+  '@opentelemetry/semantic-conventions': '1.25.0',
 
-  '@opentelemetry/otlp-transformer': '0.55.0',
-  '@opentelemetry/exporter-trace-otlp-http': '0.55.0',
-  '@opentelemetry/exporter-metrics-otlp-http': '0.55.0',
+  '@opentelemetry/otlp-transformer': '0.52.0',
+  '@opentelemetry/exporter-trace-otlp-http': '0.52.0',
+  '@opentelemetry/exporter-metrics-otlp-http': '0.52.0',
 
 });
 
