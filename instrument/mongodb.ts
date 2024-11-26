@@ -28,6 +28,7 @@ MeteorX.onReady(() => {
       }
     });
   }
+
   const origCount = x1.count;
   x1.count = function (this: Mongo.Cursor<{}>, ...args) {
     const ids = cursorIds(this);
@@ -44,6 +45,7 @@ MeteorX.onReady(() => {
         }
       });
   }
+
   const origForEach = x1.forEach;
   x1.forEach = function (this: Mongo.Cursor<{}>, ...args) {
     const ids = cursorIds(this);
@@ -58,6 +60,7 @@ MeteorX.onReady(() => {
         }
       });
   }
+
   const origMap = x1.map;
   x1.map = function (this: Mongo.Cursor<{}>, ...args) {
     const ids = cursorIds(this);
@@ -77,7 +80,7 @@ MeteorX.onReady(() => {
 const x2 = Mongo.Collection.prototype as InstanceType< typeof Mongo.Collection>;
 const origFindOne = x2.findOne;
 x2.findOne = function (this: Mongo.Collection<{}>, ...args) {
-  const ids = collIds(this, args[0]);
+  const ids = collIds(this, args[0], args[1]);
   if (ignored(ids)) return origFindOne.apply(this, args);
   return tracer.startActiveSpan(`findOne ${ids.collectionName}`,
     mongoSpanOptions(ids, 'findOne'),
@@ -90,9 +93,10 @@ x2.findOne = function (this: Mongo.Collection<{}>, ...args) {
       }
     });
 }
+
 const origCreateIndex = x2.createIndex;
 x2.createIndex = function (this: Mongo.Collection<{}>, ...args) {
-  const ids = collIds(this, args[0]);
+  const ids = collIds(this, args[0], args[1]);
   if (ignored(ids)) return origCreateIndex.apply(this, args);
   return tracer.startActiveSpan(`createIndex ${ids.collectionName}`,
     mongoSpanOptions(ids, 'createIndex'),
@@ -104,9 +108,10 @@ x2.createIndex = function (this: Mongo.Collection<{}>, ...args) {
       }
     });
 }
+
 const origInsert = x2.insert;
 x2.insert = function (this: Mongo.Collection<{}>, ...args) {
-  const ids = collIds(this, args[0]);
+  const ids = collIds(this, args[0], args[1]);
   if (ignored(ids)) return origInsert.apply(this, args);
   return tracer.startActiveSpan(`insert ${ids.collectionName}`,
     mongoSpanOptions(ids, 'insert'),
@@ -118,9 +123,10 @@ x2.insert = function (this: Mongo.Collection<{}>, ...args) {
       }
     });
 }
+
 const origRemove = x2.remove;
 x2.remove = function (this: Mongo.Collection<{}>, ...args) {
-  const ids = collIds(this, args[0]);
+  const ids = collIds(this, args[0], args[1]);
   if (ignored(ids)) return origRemove.apply(this, args);
   return tracer.startActiveSpan(`remove ${ids.collectionName}`,
     mongoSpanOptions(ids, 'remove'),
@@ -136,7 +142,7 @@ x2.remove = function (this: Mongo.Collection<{}>, ...args) {
 }
 const origUpdate = x2.update;
 x2.update = function (this: Mongo.Collection<{}>, ...args) {
-  const ids = collIds(this, args[0]);
+  const ids = collIds(this, args[0], args[2]);
   if (ignored(ids)) return origUpdate.apply(this, args);
   return tracer.startActiveSpan(`update ${ids.collectionName}`,
     mongoSpanOptions(ids, 'update'),
@@ -150,9 +156,10 @@ x2.update = function (this: Mongo.Collection<{}>, ...args) {
     }
   });
 }
+
 const origUpsert = x2.upsert;
 x2.upsert = function (this: Mongo.Collection<{}>, ...args) {
-  const ids = collIds(this, args[0]);
+  const ids = collIds(this, args[0], args[2]);
   if (ignored(ids)) return origUpsert.apply(this, args);
   return tracer.startActiveSpan(`upsert ${ids.collectionName}`,
     mongoSpanOptions(ids, 'upsert'),
@@ -166,9 +173,7 @@ x2.upsert = function (this: Mongo.Collection<{}>, ...args) {
     });
 }
 
-
 function mongoSpanOptions(ids: ReturnType<typeof collIds>, operation: string) {
-  // console.error({db: cursor._mongo.db.databaseName});
   return {
     kind: SpanKind.CLIENT,
     attributes: {
@@ -177,6 +182,7 @@ function mongoSpanOptions(ids: ReturnType<typeof collIds>, operation: string) {
       [SemanticAttributes.DB_MONGODB_COLLECTION]: ids.collectionName ?? undefined,
       [SemanticAttributes.DB_OPERATION]: operation,
       [SemanticAttributes.DB_STATEMENT]: JSON.stringify(ids.query),
+      'db.mongodb.options': JSON.stringify(ids.options),
     }
   };
 }
@@ -188,89 +194,39 @@ function ignored(ids: ReturnType<typeof collIds>) {
   return false;
 }
 
-function collIds(coll: Mongo.Collection<{}>, filter: {}) {
+function collIds(coll: Mongo.Collection<{}>, filter: {}, options: {}) {
   if (coll._name == null) {
     return {
       databaseName: null,
       collectionName: null,
       query: _defaultDbStatementSerializer(filter) ?? {},
+      options,
     };
   }
   return {
     databaseName: coll._driver.mongo?.db.databaseName as string,
     collectionName: coll._name as string,
     query: _defaultDbStatementSerializer(filter) ?? {},
+    options,
   };
 }
+
 function cursorIds(cursor: Mongo.Cursor<{}>) {
   if (!cursor._cursorDescription.collectionName) {
     return {
       databaseName: null,
       collectionName: null,
       query: _defaultDbStatementSerializer(cursor._cursorDescription.selector),
+      options: cursor._cursorDescription.options,
     };
   }
   return {
     databaseName: cursor._mongo.db.databaseName as string,
     collectionName: cursor._cursorDescription.collectionName as string,
     query: _defaultDbStatementSerializer(cursor._cursorDescription.selector),
+    options: cursor._cursorDescription.options,
   };
 }
-
-
-// It is possible to get instrumentation from mongodb driver, but the Meteor context seems long gone...
-
-// const client = MongoInternals.defaultRemoteCollectionDriver().mongo.client;
-// // contextManager.bind()
-// client.on('commandStarted', evt => {
-//   console.error('commandStarted', evt.commandName);
-//   console.error(trace.getActiveSpan()?.isRecording())
-//   console.error('fiber', Fiber.current)
-//   // console.error(new Error().stack)
-// })
-
-
-
-// const mcnof_op = Npm.require('../node_modules/meteor/npm-mongo/node_modules/mongodb/lib/operations.js')
-// console.log({mcnof_op})
-
-// const mcnof_pool = Npm.require('../node_modules/meteor/npm-mongo/node_modules/mongodb/lib/cmap/connection_pool.js')
-// const checkOOO = mcnof_pool.ConnectionPool.prototype.checkOut;
-// mcnof_pool.ConnectionPool.prototype.checkOut = function (cb) {
-//   const ctx = context.active();
-//   console.log('checkout', trace.getSpan(ctx)?.isRecording());
-//   checkOOO.call(this, (...args) => context.with(ctx, () => cb(...args)));
-// }
-
-// const mcnofg = Npm.require('../node_modules/meteor/npm-mongo/node_modules/mongodb/lib/cmap/connection.js')
-// const ins = new MongoDBInstrumentation();
-// ins.init()[1].files[0].patch(mcnofg);
-// const orig = mcnofg.Connection.prototype.command;
-// mcnofg.Connection.prototype.command = function (...args) {
-//   console.error(args[0].collection, trace.getActiveSpan()?.isRecording());
-//   if (args[0].collection == 'Profiles') console.log(new Error().stack)
-//   return orig.apply(this, args);
-// }
-
-
-
-
-// const origOpen = MongoInternals.defaultRemoteCollectionDriver().open;
-// MongoInternals.defaultRemoteCollectionDriver().mongo.client.withSession(x => x.).open = (name, conn) => {
-//   console.log('open', name);
-//   const coll = origOpen.call(MongoInternals.defaultRemoteCollectionDriver(), name, conn);
-//   return new Proxy(coll, {
-//     // apply(real, self, args) {
-//     //   console.log(args);
-//     //   return
-//     // }
-//     get(target, key) {
-//       console.log('get', key);
-//       return target[key];
-//     }
-//   })
-// }
-
 
 function _defaultDbStatementSerializer(commandObj: string | Record<string, unknown>, isRoot=true) {
   const { enhancedDbReporting } = settings;
