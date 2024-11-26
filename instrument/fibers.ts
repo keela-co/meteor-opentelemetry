@@ -1,7 +1,6 @@
-import { metrics, trace, context } from '@opentelemetry/api';
-// import type FiberType from 'fibers';
-// let Fibers: typeof FiberType = Npm.require('fibers');
+import { metrics } from '@opentelemetry/api';
 import Fibers from 'fibers';
+import {settings} from "../settings";
 let StartTracked = Symbol('MontiStartTracked');
 
 // Two instrumentations of fibers:
@@ -11,7 +10,7 @@ let StartTracked = Symbol('MontiStartTracked');
 let wrapped = false;
 
 export function wrapFibers () {
-  if (wrapped) {
+  if (wrapped || !settings.metrics?.enabled) {
     return;
   }
   wrapped = true;
@@ -30,29 +29,10 @@ export function wrapFibers () {
   const fiberInvokes = metric.createCounter('meteor.fibers.num_starts');
   const fiberYields = metric.createCounter('meteor.fibers.num_yields');
 
-  // We can also trace when fibers suspend... but the value seems low
-  // const spans = new WeakMap<Fibers,Span>();
-  // const tracer = trace.getTracer('fiberyield');
-  // function endAsyncEvent (fiber: InstanceType<typeof FiberType>) {
-  //   const asyncSpan = spans.get(fiber);
-  //   if (asyncSpan) {
-  //     console.log("Ending fiber span")
-  //     spans.delete(fiber);
-  //     asyncSpan.end();
-  //   }
-  // }
-
   let originalYield = Fibers.yield;
   Fibers.yield = function () {
     fiberYields.add(1);
 
-    // const activeSpan = trace.getActiveSpan();
-    // if (activeSpan) {
-    //   console.log('Starting fiber span');
-    //   const asyncSpan = tracer.startSpan('async_op');
-    //   spans.set(Fibers.current, asyncSpan);
-    //   return context.with(trace.setSpan(context.active(), asyncSpan), originalYield);
-    // }
 
     return originalYield();
   };
@@ -72,14 +52,11 @@ export function wrapFibers () {
 
   Fibers.prototype.run = function (val) {
     ensureFiberCounted(this);
-    // endAsyncEvent(this);
 
-    // TODO: consider copying our env from 'Fibers.current' into 'this'
 
     try {
       return originalRun.call(this, val);
     } finally {
-      // console.log('fiber end')
       if (!this.started) {
         // This fiber has been returned to the cold pool
         activeFibers.add(-1);
@@ -90,10 +67,6 @@ export function wrapFibers () {
 
   Fibers.prototype.throwInto = function (val) {
     ensureFiberCounted(this);
-    // endAsyncEvent(this);
-
-    // console.log("fiber throwinto", val.message)
-
     try {
       return originalThrowInto.call(this, val);
     } finally {

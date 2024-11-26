@@ -2,8 +2,8 @@ import { type Attributes } from "@opentelemetry/api";
 import { Meteor } from "meteor/meteor";
 
 export const settings: {
-  enabled?: boolean;
-  otlpEndpoint?: string;
+  traces?: { enabled?: boolean; otlpEndpoint?: string };
+  metrics?: { enabled?: boolean; otlpEndpoint?: string };
   serverResourceAttributes?: Attributes;
   clientResourceAttributes?: Attributes;
   enhancedDbReporting?: boolean;

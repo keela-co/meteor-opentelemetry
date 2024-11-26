@@ -48,14 +48,14 @@ export function getClientIp(connection?: Meteor.Connection) {
     return ip.split(':')[0];
 }
 
-if (settings.enabled) {
+if (settings.traces?.enabled || settings.metrics?.enabled) {
     // These are really only used for their URL, because we receive pre-transformed payloads
-    const tracesExporter = new OTLPTraceExporter({
-        url: settings.otlpEndpoint ? `${settings.otlpEndpoint}/v1/traces` : void 0,
-    });
-    const metricsExporter = new OTLPMetricExporter({
-        url: settings.otlpEndpoint ? `${settings.otlpEndpoint}/v1/metrics` : void 0,
-    });
+    const tracesExporter = settings.traces?.enabled ? new OTLPTraceExporter({
+        url: settings.traces?.otlpEndpoint ? `${settings.traces.otlpEndpoint}/v1/traces` : void 0,
+    }) : null;
+    const metricsExporter = settings.metrics?.enabled ? new OTLPMetricExporter({
+        url: settings.metrics?.otlpEndpoint ? `${settings.metrics.otlpEndpoint}/v1/metrics` : void 0,
+    }) : null;
 
     const clientResources = new Resource(settings.clientResourceAttributes ?? {});
     clientResources.attributes['service.name'] ??= `unknown_service-browser`;
@@ -88,6 +88,9 @@ if (settings.enabled) {
             check(payload, {
                 resourceSpans: Array,
             });
+            if (!tracesExporter) {
+                return;
+            }
             payload.resourceSpans?.forEach(mangleResource.bind(this));
             await new Promise<void>((ok, fail) =>
                 sendWithHttp(tracesExporter, JSON.stringify(payload), 'application/json', ok, fail));
@@ -97,6 +100,9 @@ if (settings.enabled) {
             check(payload, {
                 resourceMetrics: Array,
             });
+            if (!metricsExporter) {
+                return;
+            }
             payload.resourceMetrics?.forEach(mangleResource.bind(this));
             await new Promise<void>((ok, fail) =>
                 sendWithHttp(metricsExporter._otlpExporter, JSON.stringify(payload), 'application/json', ok, fail));

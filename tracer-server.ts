@@ -16,30 +16,32 @@ import './instrument/ddp-server'
 import './instrument/webapp'
 import './instrument/mongodb'
 
-if (settings.enabled) {
+if (settings.traces?.enabled || settings.metrics?.enabled) {
   const resource = new Resource(settings.serverResourceAttributes ?? {});
 
-  const metricsProvider = new MeterProvider({
-    resource,
-  });
-  metricsProvider.addMetricReader(new PeriodicExportingMetricReader({
-    exporter: new OTLPMetricExporter({
-      url: settings.otlpEndpoint ? `${settings.otlpEndpoint}/v1/metrics` : undefined,
-    }),
-    exportIntervalMillis: 20_000,
-  }));
-  metrics.setGlobalMeterProvider(metricsProvider);
-
-  const provider = new NodeTracerProvider({
-    resource,
-  });
-  provider.addSpanProcessor(new BatchSpanProcessor(new OTLPTraceExporter({
-    url: settings.otlpEndpoint ? `${settings.otlpEndpoint}/v1/traces` : undefined,
-  })));
-  // this also sets the global trace provider:
-  provider.register({
-    contextManager: new MeteorContextManager().enable(),
-  });
-
+  if (settings.metrics?.enabled) {
+    const metricsProvider = new MeterProvider({
+      resource,
+    });
+    metricsProvider.addMetricReader(new PeriodicExportingMetricReader({
+      exporter: new OTLPMetricExporter({
+        url: settings.metrics?.otlpEndpoint ? `${settings.metrics.otlpEndpoint}/v1/metrics` : undefined,
+      }),
+      exportIntervalMillis: 20_000,
+    }));
+    metrics.setGlobalMeterProvider(metricsProvider);
+  }
+  if (settings.traces?.enabled) {
+    const provider = new NodeTracerProvider({
+      resource,
+    });
+    provider.addSpanProcessor(new BatchSpanProcessor(new OTLPTraceExporter({
+      url: settings.traces?.otlpEndpoint ? `${settings.traces.otlpEndpoint}/v1/traces` : undefined,
+    })));
+    // this also sets the global trace provider:
+    provider.register({
+      contextManager: new MeteorContextManager().enable(),
+    });
+  }
   wrapFibers(); // apparently needs to happen after the metrics provider is set up
 }
